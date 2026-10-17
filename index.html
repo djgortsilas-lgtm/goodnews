@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Καλά Νέα — μόνο καλές και ευχάριστες ειδήσεις από όλο τον κόσμο." />
+  <title>Καλά Νέα — Οι καλές ειδήσεις του κόσμου</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">☀️</span>
+        <div>
+          <h1 class="brand-title">Καλά Νέα</h1>
+          <p class="brand-tagline">Μόνο καλές και ευχάριστες ειδήσεις από όλο τον κόσμο</p>
+        </div>
+      </div>
+      <button id="refresh-btn" class="btn btn-refresh" type="button" title="Ανανέωση ειδήσεων">
+        <span class="refresh-icon" aria-hidden="true">⟳</span> Ενημέρωση
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="toolbar" aria-label="Φίλτρα">
+      <div class="search-wrap">
+        <input
+          id="search-input"
+          class="search-input"
+          type="search"
+          placeholder="Αναζήτηση ειδήσεων…"
+          autocomplete="off"
+          aria-label="Αναζήτηση ειδήσεων"
+        />
+      </div>
+      <div class="sort-wrap">
+        <label for="sort-select" class="sort-label">Ταξινόμηση:</label>
+        <select id="sort-select" class="sort-select">
+          <option value="newest">Νεότερα πρώτα</option>
+          <option value="random">Τυχαία</option>
+        </select>
+      </div>
+    </section>
+
+    <nav id="categories" class="categories" aria-label="Κατηγορίες"></nav>
+
+    <p id="status" class="status" role="status">Φόρτωση ειδήσεων…</p>
+
+    <section id="news-grid" class="news-grid" aria-live="polite"></section>
+
+    <p id="empty" class="empty hidden">Δεν βρέθηκαν ειδήσεις για αυτά τα κριτήρια.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Οι ειδήσεις προέρχονται από αξιόπιστα sites καλών νέων.
+        Κάθε κάρτα συνδέεται στο πρωτότυπο άρθρο.
+      </p>
+      <p id="meta-info" class="meta-info"></p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
