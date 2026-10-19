@@ -29,6 +29,16 @@ const els = {
   meta: document.getElementById("meta-info"),
 };
 
+const GREEK_LETTERS = /[\u0370-\u03FF\u1F00-\u1FFF]/g;
+
+function isGreekText(s) {
+  const text = String(s || "");
+  const greek = (text.match(GREEK_LETTERS) || []).length;
+  if (!greek) return false;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  return greek >= (greek + latin) * 0.25;
+}
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -127,11 +137,14 @@ function renderCards() {
     .map((item) => {
       const cat = CATEGORY_LABELS[item.category] || CATEGORY_LABELS.world;
       const flag = item.flag || "🌍";
-      const primary = translatedUrl(item.link, item.lang);
+      const sourceLang = item.langOriginal || item.lang;
+      const inGreek = item.lang === "el";
+      const primary = translatedUrl(item.link, sourceLang);
       const showOriginal =
-        item.lang !== "el" &&
+        !inGreek &&
         item.titleOriginal &&
         item.titleOriginal.toLowerCase() !== item.title.toLowerCase();
+      const description = isGreekText(item.description) ? item.description : "";
       const img = item.image
         ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.closest('.card-media').innerHTML='<div class=&quot;placeholder no-img&quot;>${cat.emoji}</div>'">`
         : `<div class="placeholder no-img">${cat.emoji}</div>`;
@@ -144,16 +157,16 @@ function renderCards() {
               <span class="card-source">${escapeHtml(item.source)}</span>
               <span class="card-cat">${cat.emoji} ${escapeHtml(cat.label)}</span>
               <span>${escapeHtml(relativeTime(item.date))}</span>
-              ${item.lang !== "el" ? `<span class="card-translated" title="Ο τίτλος μεταφράστηκε αυτόματα">Μεταφρασμένο</span>` : ""}
+              ${inGreek && sourceLang !== "el" ? `<span class="card-translated" title="Ο τίτλος μεταφράστηκε αυτόματα">Μεταφρασμένο</span>` : ""}
             </div>
             <h2 class="card-title">
               <a href="${escapeHtml(primary)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>
             </h2>
             ${showOriginal ? `<p class="card-title-original" title="Αρχικός τίτλος">${escapeHtml(item.titleOriginal)}</p>` : ""}
-            ${item.description ? `<p class="card-desc">${escapeHtml(item.description)}</p>` : ""}
+            ${description ? `<p class="card-desc">${escapeHtml(description)}</p>` : ""}
             <div class="card-actions">
               <a class="card-link" href="${escapeHtml(primary)}" target="_blank" rel="noopener noreferrer">Διαβάστε περισσότερα →</a>
-              ${item.lang !== "el" ? `<a class="card-link-original" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" title="Πρωτότυπο στα αγγλικά">Πρωτότυπο ↗</a>` : ""}
+              ${sourceLang !== "el" ? `<a class="card-link-original" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" title="Πρωτότυπο στα αγγλικά">Πρωτότυπο ↗</a>` : ""}
             </div>
           </div>
         </article>`;

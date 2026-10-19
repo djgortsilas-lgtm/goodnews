@@ -13,7 +13,11 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "data", "data.json");
 const CACHE_PATH = join(ROOT, "data", "translation-cache.json");
 const MAX_TOTAL = 150;
-const TRANSLATE_DELAY_MS = 120;
+const TRANSLATE_DELAY_MS = 250;
+const TRANSLATE_ATTEMPTS = 4;
+const TRANSLATE_BACKOFF_MS = 1200;
+const TRANSLATE_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 /* ---------- πηγές ---------- */
 
@@ -336,6 +340,16 @@ function greekPasses(mode, title, description) {
 
 /* ---------- μετάφραση ---------- */
 
+const GREEK_LETTERS = /[\u0370-\u03FF\u1F00-\u1FFF]/g;
+
+/** true αν το κείμενο είναι πραγματικά ελληνικό (όχι αγγλικό ή μικτό) */
+function isGreekText(s) {
+  const greek = (String(s || "").match(GREEK_LETTERS) || []).length;
+  if (!greek) return false;
+  const latin = (String(s).match(/[A-Za-z]/g) || []).length;
+  return greek >= (greek + latin) * 0.25;
+}
+
 function loadCache() {
   try {
     return JSON.parse(readFileSync(CACHE_PATH, "utf8"));
@@ -355,30 +369,79 @@ function cacheKey(text) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function translateText(text, cache, stats) {
+async function requestTranslation(text, provider, sourceLang) {
+  if (provider === "mymemory") {
+    const url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text) +
+      `&langpair=${encodeURIComponent(sourceLang)}|el`;
+    const res = await fetch(url, { headers: { "User-Agent": TRANSLATE_UA } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return decodeEntities(String(json?.responseData?.translatedText || "")).trim();
+  }
+
+  if (provider === "google-alt") {
+    const url =
+      "https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=el&q=" +
+      encodeURIComponent(text);
+    const res = await fetch(url, { headers: { "User-Agent": TRANSLATE_UA } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (typeof json === "string") return json.trim();
+    if (Array.isArray(json)) {
+      return json
+        .map((part) => (Array.isArray(part) ? part[0] : part))
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+    }
+    return "";
+  }
+
+  const url =
+    "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=el&dt=t&q=" +
+    encodeURIComponent(text);
+  const res = await fetch(url, { headers: { "User-Agent": TRANSLATE_UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  return (json[0] || []).map((seg) => seg[0]).join("").trim();
+}
+
+async function translateText(text, cache, stats, sourceLang = "en") {
+  if (!text) return text;
+  text = String(text).trim();
   if (!text) return text;
   const key = cacheKey(text);
-  if (cache[key]) {
+  if (cache[key] && isGreekText(cache[key])) {
     stats.cached++;
     return cache[key];
   }
-  try {
-    const url =
-      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=el&dt=t&q=" +
-      encodeURIComponent(text);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const translated = (json[0] || []).map((seg) => seg[0]).join("");
-    if (translated && translated.trim()) {
-      cache[key] = translated;
-      stats.translated++;
-      await sleep(TRANSLATE_DELAY_MS);
-      return translated;
+
+  // Εναλλαγή παρόχων ώστε να μην κολλάμε όταν το Google απορρίπτει τον runner
+  const providers = ["google", "google", "google-alt", "mymemory"];
+  for (let attempt = 0; attempt < TRANSLATE_ATTEMPTS; attempt++) {
+    try {
+      const translated = await requestTranslation(
+        text,
+        providers[Math.min(attempt, providers.length - 1)],
+        sourceLang
+      );
+      if (translated && translated !== text && isGreekText(translated)) {
+        cache[key] = translated;
+        stats.translated++;
+        await sleep(TRANSLATE_DELAY_MS);
+        return translated;
+      }
+      stats.retries++;
+    } catch (err) {
+      stats.retries++;
     }
-  } catch (err) {
-    stats.failed++;
+    if (attempt < TRANSLATE_ATTEMPTS - 1) {
+      await sleep(TRANSLATE_BACKOFF_MS * (attempt + 1));
+    }
   }
+  stats.failed++;
   return text;
 }
 
@@ -437,6 +500,7 @@ async function fetchFeed(feed) {
         source: feed.name,
         category,
         lang: feed.lang,
+        langOriginal: feed.lang,
         rawCategories: cats,
       });
     }
@@ -448,6 +512,63 @@ async function fetchFeed(feed) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/* ---------- περιλήψεις άρθρων χωρίς περιγραφή ---------- */
+
+function extractMetaDescription(html) {
+  const patterns = [
+    /<meta[^>]+(?:name|property)=["'](?:description|og:description|twitter:description)["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:description|og:description|twitter:description)["']/i,
+  ];
+  for (const re of patterns) {
+    const match = html.match(re);
+    if (match) return stripTags(match[1]);
+  }
+  return "";
+}
+
+async function fetchPageDescription(link) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(link, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": TRANSLATE_UA },
+      redirect: "follow",
+    });
+    if (!res.ok) return "";
+    const type = res.headers.get("content-type") || "";
+    if (type && !/text\/html/i.test(type)) return "";
+    return extractMetaDescription(await res.text());
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function backfillDescriptions(items) {
+  const missing = items.filter((item) => !item.descriptionOriginal && item.link);
+  if (!missing.length) return 0;
+  console.log(`\nΑνάκτηση περιλήψεων για ${missing.length} άρθρα χωρίς περιγραφή…`);
+  let filled = 0;
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < missing.length) {
+      const item = missing[cursor++];
+      const description = await fetchPageDescription(item.link);
+      if (description) {
+        item.descriptionOriginal =
+          description.length > 400 ? description.slice(0, 397).replace(/\s+\S*$/, "") + "…" : description;
+        item.description = item.descriptionOriginal;
+        filled++;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
+  console.log(`  ✓ Βρέθηκαν περιλήψεις για ${filled}/${missing.length} άρθρα`);
+  return filled;
 }
 
 /* ---------- main ---------- */
@@ -462,25 +583,39 @@ for (const item of all) {
   item.flag = flagEmoji(item.country);
 }
 
+// περιλήψεις για feeds που δεν παρέχουν description
+await backfillDescriptions(all);
+
 // μετάφραση αγγλικών
 const cache = loadCache();
-const stats = { translated: 0, cached: 0, failed: 0 };
+const stats = { translated: 0, cached: 0, failed: 0, retries: 0 };
 const english = all.filter((i) => i.lang === "en");
 console.log(`\nΜετάφραση ${english.length} αγγλικών άρθρων στα ελληνικά…`);
 let done = 0;
+let untranslated = 0;
 for (const item of english) {
-  item.title = await translateText(item.titleOriginal, cache, stats);
-  item.description = await translateText(
-    item.descriptionOriginal.slice(0, 350),
-    cache,
-    stats
-  );
-  if (item.descriptionOriginal.length > 350) item.description += "…";
+  const sourceLang = item.langOriginal || "en";
+  const title = await translateText(item.titleOriginal, cache, stats, sourceLang);
+  let description = "";
+  if (item.descriptionOriginal) {
+    description = await translateText(item.descriptionOriginal.slice(0, 350), cache, stats, sourceLang);
+    if (item.descriptionOriginal.length > 350) description += "…";
+  }
+  if (isGreekText(title)) {
+    item.title = title;
+    item.lang = "el";
+  } else {
+    untranslated++;
+  }
+  item.description = isGreekText(description) ? description : "";
   done++;
   if (done % 25 === 0) console.log(`  … ${done}/${english.length}`);
 }
 saveCache(cache);
-console.log(`Μεταφράσεις: ${stats.translated} νέες, ${stats.cached} από cache, ${stats.failed} αποτυχίες`);
+console.log(`Μεταφράσεις: ${stats.translated} νέες, ${stats.cached} από cache, ${stats.retries} επαναλήψεις, ${stats.failed} αποτυχίες`);
+if (untranslated > 0) {
+  console.log(`⚠ ${untranslated} άρθρα έμειναν στα αγγλικά — θα ξαναδοκιμαστούν στην επόμενη εκτέλεση`);
+}
 
 // ταξινόμηση: ελληνικά πρώτα (με προτεραιότητα), μετά χρονολογικά
 all.sort((a, b) => {
