@@ -34,6 +34,18 @@ const FEEDS = [
   { name: "DailyGood", url: "https://www.dailygood.org/feed/", lang: "en", mode: "goodsite", max: 10 },
   { name: "Sunny Skyz", url: "https://feeds.feedburner.com/SunnySkyz", lang: "en", mode: "goodsite", max: 15 },
   { name: "Upworthy", url: "https://www.upworthy.com/feed", lang: "en", mode: "goodsite", max: 12 },
+
+  // Ιατρικά & επιστημονικά επιτεύγματα (μόνο θετικά)
+  { name: "Futurity", url: "https://www.futurity.org/feed/", lang: "en", mode: "positive", max: 12 },
+  { name: "ScienceDaily Health", url: "https://www.sciencedaily.com/rss/health_medicine.xml", lang: "en", mode: "positive", max: 12 },
+  { name: "Medical Xpress", url: "https://medicalxpress.com/rss-feed/", lang: "en", mode: "positive", max: 10 },
+  { name: "Neuroscience News", url: "https://neurosciencenews.com/feed/", lang: "en", mode: "positive", max: 8 },
+
+  // Τεχνολογικά επιτεύγματα (μόνο θετικά)
+  { name: "New Atlas", url: "https://newatlas.com/index.rss", lang: "en", mode: "positive", max: 12 },
+  { name: "TechXplore", url: "https://techxplore.com/rss-feed/", lang: "en", mode: "positive", max: 10 },
+  { name: "Singularity Hub", url: "https://singularityhub.com/feed/", lang: "en", mode: "positive", max: 8 },
+  { name: "Interesting Engineering", url: "https://interestingengineering.com/feed", lang: "en", mode: "positive", max: 8 },
 ];
 
 const SOURCE_DEFAULT_COUNTRY = {
@@ -56,7 +68,54 @@ const NEGATIVE_TITLE = [
   /\bcasualt/i, /\binvasion\b/i, /\bbomb/i, /\bgunman\b/i, /\bstabbing\b/i,
   /\bhurricane kills\b/i, /\bearthquake kills\b/i, /\btsunami kills\b/i,
   /\bfatal\b/i, /\bmolest/i, /\bporn/i, /\bscandal\b/i, /\bcorruption\b/i,
+  // επιπλέον για ιατρικά/τεχνολογικά feeds
+  /\brecall(?:s|ed)?\b/i, /\boutbreak\b/i, /\bepidemic\b/i, /\bpandemic\b/i,
+  /\bside effects?\b/i, /\braises? (?:the )?risk\b/i, /\bincreas(?:e|es|ed|ing) (?:the )?risk\b/i,
+  /\blinked to (?:a )?(?:higher|increased) risk\b/i, /\bwarning\b/i, /\bdeaths?\b/i,
+  /\bhospitalized\b/i, /\binfections?\b/i, /\bdisease (?:spread|outbreak)\b/i,
 ];
+
+// Θετικά σήματα για πηγές επιστήμης/τεχνολογίας (mode: "positive")
+const POSITIVE_EN = [
+  /\bbreakthrough/i, /\bdiscover(?:y|ed|ies|ing)?\b/i,
+  /\bnew (?:study|method|technique|device|technology|treatment|therapy|drug|vaccine|test|material|approach|tool|system|compound|chip|procedure|way)\b/i,
+  /\bcur(?:e|es|ed|ing)\b/i, /\btreat(?:ment|ments|ed|ing)?\b/i, /\btherap(?:y|ies|eutic)/i,
+  /\bvaccine/i, /\bimplant/i, /\btransplant/i, /\brestor(?:e|es|ed|ing|ation)\b/i,
+  /\bresc(?:ue|ues|ued|uing)\b/i, /\bsav(?:e|es|ed|ing)\b/i, /\brecov(?:er|ers|ered|ery|eries|ering)/i,
+  /\bremov(?:e|es|ed|ing|al)\b/i, /\beliminat(?:e|es|ed|ing)/i, /\bprotect(?:s|ed|ing|ion)?\b/i,
+  /\brevers(?:e|es|ed|al|ing)\b/i, /\bfirst-ever\b/i, /\bworld(?:'s)? first\b/i, /\bmilestone/i,
+  /\binnovat(?:e|es|ed|ion|ive)\b/i, /\binvent(?:s|ed|ion|or)?\b/i, /\bimprov(?:e|es|ed|ement)\b/i,
+  /\bsuccess(?:ful|fully)?\b/i, /\bapprov(?:e|ed|al)\b/i, /\beffective\b/i,
+  /\bshows? promise\b/i, /\bpromising\b/i, /\bproves?\b/i, /\bachiev(?:e|es|ed|ing|ement)/i,
+  /\bunlock(?:s|ed|ing)?\b/i, /\bboost(?:s|ed|ing)?\b/i, /\bslash(?:es|ed|ing)?\b/i,
+  /\bslow(?:s|ed|ing)?\b/i, /\blower(?:s|ed|ing)?\b/i, /\bgood for\b/i, /\bspeed\b/i,
+  /\bwin(?:s|ning)?\b/i, /\bnobel\b/i, /\baward/i,
+  /\bengineers? (?:build|built|develop|create|design|unveil|invent)/i,
+  /\bscientists? (?:find|found|discover|develop|create|unveil|reveal|identify|achieve|win|uncover|show|restore|reconstruct)/i,
+  /\bresearchers? (?:find|found|discover|develop|create|unveil|reveal|identify|show|uncover|restore|reconstruct)/i,
+  /\bunveil(?:s|ed|ing)?\b/i, /\breconstruct(?:s|ed|ing)?\b/i,
+  /\brobot/i, /\bsolar/i, /\bbattery/i, /\balgorithm/i, /\bquantum/i, /\bsatellite/i,
+  /\blongevity/i, /\bgene therapy/i, /\bstem cells?\b/i, /\bprosthetic/i, /\bdiagnos(?:e|ed|is|tic)/i,
+  /\b(?:turns?|converts?) .* into\b/i, /\bpowered by\b/i, /\bsmart(?:er)?\b/i, /\bfaster\b/i,
+  /\bcheaper\b/i, /\bcleaner\b/i, /\bgreener\b/i,
+];
+
+// Αποκλείουμε αρνητικό/ουδέτερο πλαίσιο στα επιστημονικά feeds
+const NEGATIVE_EN_TITLE = [
+  /\bcan(?:'|’)?t\b/i, /\b(?:may|might|could|will|would|do|does|did|is|are|was|were|has|have) not\b/i,
+  /\bmortalit/i, /\bfatalit/i, /\bharmful\b/i, /\battacks?\b/i, /\btampering\b/i,
+  /\bexits?\b/i, /\bwithdraw/i, /\bblow\b/i, /\bfiction\b/i, /\bmines\b/i,
+  /\bstrike weapons?\b/i, /\bweapons?\b/i, /\bmilitary\b/i, /\bnavy\b/i, /\bwars?\b/i,
+  /\bspurn\b/i, /\bconcern(?:s|ed|ing)?\b/i, /\bwarns?\b/i, /\bcrisis\b/i, /\bshortage\b/i,
+  /\bdeclin/i, /\bfail(?:s|ed|ing|ure)?\b/i, /\bshuts?\b/i, /\bslump/i,
+  /\bhigher (?:risk|mortality|deaths|costs)\b/i, /\badversit/i, /\btamper/i,
+  /\bmothership\b/i, /\bwarfare\b/i, /\bmissiles?\b/i, /\bbombers?\b/i, /\bcombat\b/i,
+];
+
+// Αρνητικό ψυχικό πλαίσιο — επιτρέπεται μόνο όταν υπάρχει θετική έκβαση
+const NEGATIVE_EN_MIND = /\b(?:anxiety|stress|depression|ptsd|trauma|burnout|loneliness)\b/i;
+const POSITIVE_EN_OUTCOME =
+  /\b(?:relief|help(?:s|ed|ing)?|treat\w*|manag\w*|cop(?:e|es|ed|ing)|reduc\w*|lower\w*|resilien\w*|recover\w*|heal\w*|improv\w*|prevent\w*|protect\w*|calm\w*)\b/i;
 
 const SKIP_TITLE = [
   /horoscope/i, /astrolog/i, /free will astrology/i, /\bpoll\b/i, /\bquiz\b/i,
@@ -109,8 +168,8 @@ const CATEGORIES = [
     words: ["science", "scientist", "research", "discovery", "physics", "chemistry", "biology", "space", "nasa", "esa ", "telescope", "galaxy", "exoplanet", "mars", "rocket", "satellite", "quantum", "gene", "dna", "brain", "vaccine", "cancer", "treatment", "therapy", "surgery", "doctor", "nurse", "hospital", "medical", "medicine", "health ", "patient", "clinical trial", "diagnos", "cure ", "organ", "transplant", "stem cell", "antibiotic", "alzheimer", "diabetes", "prosthetic", "implant", "longevity", "nutrition", "mental health", "psychology", "archaeolog", "fossil", "dinosaur", "species", "evolution", "universe", "laboratory", "experiment", "university", "professor", "nobel",
       "έρευν", "επιστημ", "επιστήμον", "ανακαλύφ", "νοσοκομείο", "γιατρ", "θεραπει", "εμβολ", "ασθενε", "παιδιατρ", "οδοντ", "μεταμόσχευ", "καρδ", "εγκέφαλ", "γονίδ", "δνκ", "κυτταρ", "φαρμακ", "κλινικ", "πανεπιστημ", "αρχαιολογ", "παλαιοντ", "απολίθωμ", "δεινόσαυρ", "αστρονομ", "διάστημ", "ορυκτ", "φυσικ", "χημ", "βιολ", "ευρημ", "μελέτη", "σπουδ", "εργαστηρ", "καρκίν", "διάγνωσ", "εμμην", "γυναικολόγ", "μωρ", "βρέφ", "εγχείρησ", "ψυχίατρ", "νευρολόγ", "φυσιοθεραπ", "αιμολογ", "μικροβιολ", "οφθαλμ", "ακού", "βάρδια", "νοσηλε"] },
   { key: "technology", label: "Τεχνολογία", emoji: "💡",
-    words: ["technology", "tech ", "app ", "software", "robot", "ai ", "artificial intelligence", "machine learning", "startup", "innovation", "invention", "gadget", "smartphone", "computer", "battery", "drone", "3d print", "electric vehicle", "chip", "open source", "algorithm", "sensor", "bluetooth", "heat pump", "e-bike", "quantum computing",
-      "τεχνολογ", "εφεύρεσ", "εφαρμογ", "λογισμικ", "ρομποτ", "τεχνητή νοημοσύν", "εφευρέτ", "καινοτομ", "ψηφιακ", "πλατφόρμ", "startup", "μικροτσίπ", "μπαταρ"] },
+    words: ["technology", "tech ", "app ", "software", "robot", "ai ", "artificial intelligence", "machine learning", "startup", "innovation", "invention", "gadget", "smartphone", "computer", "battery", "drone", "3d print", "electric vehicle", "chip", "open source", "algorithm", "sensor", "bluetooth", "heat pump", "e-bike", "quantum computing", "satellite", "cable", "electrode", "semiconductor", "wearable", "computing", "device", "gadget", "electronics", "materials", "engineering",
+      "τεχνολογ", "εφεύρεσ", "εφαρμογ", "λογισμικ", "ρομποτ", "τεχνητή νοημοσύν", "εφευρέτ", "καινοτομ", "ψηφιακ", "πλατφόρμ", "startup", "μικροτσίπ", "μπαταρ", "δορυφόρ", "ημιαγωγ", "ηλεκτρόδι", "νανοτεχν"] },
   { key: "sports", label: "Αθλητισμός", emoji: "🏆",
     words: ["sport", "athlete", "olympi", "football", "soccer", "basketball", "tennis", "marathon", "championship", "tournament", "medal", "world cup", "league", "runner", "cycling", "swim", "gymnastics", "boxing", "cricket", "rugby", "golf", "ski", "surf", "triathlon", "softball", "baseball", "hockey", "formula 1", "nba", "nfl", "uefa", "fifa",
       "αθλητ", "γκολ", "νίκη", "νίκες", "νίκησε", "επικράτησε", "πρωταθλ", "κύπελλο", "μπάσκετ", "μπασκετ", "ποδοσφαιρ", "βόλεϊ", "τένις", "μαραθώνι", "μετάλλιο", "ολυμπι", "τρόπαι", "πρόκρισ", "ημιτελικ", "ντέρμπι", "αήττητ", "παλαιστ", "κωπηλατ", "σκακ", "γυμναστικ", "κολύμβησ", "παίκτ", "προπονητ", "όσμαν", "λίγκα", "χατ-τρικ", "πέναλτι", "ριμπάουντ", "ασίστ", "παράταση", "εκτέλεσε", "δημιούργησε", "σουτάρισε", "γήπεδ", "αγών", "κέρδισε", "τερμάτισε", "πρωτάθλημα", "μπάσκετμπολ", "basket", "league", "highlights", "νταμπλ", "μόλυνδο", "σούπερ λίγκα"] },
@@ -306,10 +365,19 @@ function categorize(text) {
     let score = 0;
     for (const w of cat.words) {
       const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(escaped, "i").test(t)) score++;
+      // Σύντομες λέξεις (cat, dog, ai…) με όρια ώστε να μη πιάνουν "Category" κ.λπ.
+      const pattern = /^[a-z]{1,4}$/i.test(w) ? `\\b${escaped}\\b` : escaped;
+      if (new RegExp(pattern, "i").test(t)) score++;
     }
     // Bonus αθλητικών σκορ (π.χ. 84-78)
     if (cat.key === "sports" && /\d{1,3}\s*[-–]\s*\d{1,3}/.test(t)) score += 2;
+    // Ισχυρό τεχνολογικό σήμα → προτεραιότητα στην Τεχνολογία
+    if (
+      cat.key === "technology" &&
+      /\b(?:ai|a\.i\.|artificial intelligence|machine learning|robot\w*|chip|quantum|satellite|battery|software|algorithm|drone|semiconductor|computing|cable|data cent(?:er|re)|electric vehicle|invent\w*|innovat\w*)\b/i.test(t)
+    ) {
+      score += 3;
+    }
     if (score > bestScore) {
       bestScore = score;
       best = cat;
@@ -336,6 +404,19 @@ function greekPasses(mode, title, description) {
   }
   // greekSoft (site καλών νέων): αρκεί να μην είναι αρνητικός ο τίτλος
   return true;
+}
+
+/* ---------- θετικό φιλτράρισμα (επιστήμη/τεχνολογία) ---------- */
+
+function positivePasses(mode, title) {
+  if (mode !== "positive") return true;
+  if (NEGATIVE_EN_TITLE.some((re) => re.test(title))) return false;
+  if (NEGATIVE_EN_MIND.test(title) && !POSITIVE_EN_OUTCOME.test(title)) return false;
+  // Επιτρέπουμε το "risk" μόνο όταν μειώνεται
+  if (/\brisk\b/i.test(title) && !/\b(?:lower|reduc\w*|cuts?|less|slows?)\b[^.]*\brisk\b/i.test(title)) {
+    return false;
+  }
+  return POSITIVE_EN.some((re) => re.test(title));
 }
 
 /* ---------- μετάφραση ---------- */
@@ -483,6 +564,7 @@ async function fetchFeed(feed) {
       }
 
       if (feed.lang === "en" && NEGATIVE_TITLE.some((re) => re.test(title))) continue;
+      if (feed.lang === "en" && !positivePasses(feed.mode, title)) continue;
       if (feed.lang === "el" && !greekPasses(feed.mode, title, description)) continue;
 
       const haystack = `${title} ${description} ${cats.join(" ")}`;

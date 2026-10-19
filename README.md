@@ -4,7 +4,8 @@
 
 ## Τι κάνει
 
-- Συλλέγει RSS από ~12 sites αποκλειστικά καλών νέων (Good News Network, Positive News, Nice News, Good Good Good, Reasons to be Cheerful, Happy Eco News, The Better India κ.ά.)
+- Συλλέγει RSS από ~19 sites (Good News Network, Positive News, Nice News, Good Good Good, Reasons to be Cheerful, Happy Eco News, The Better India κ.ά.)
+- Ιατρικά & τεχνολογικά επιτεύγματα από Futurity, ScienceDaily Health, Medical Xpress, Neuroscience News, New Atlas, TechXplore, Singularity Hub, Interesting Engineering — με φίλτρο **μόνο θετικών** τίτλων
 - Φιλτράρει αρνητικούς τίτλους (blacklist), αφαιρεί διπλότυπα και μη-άρθρα
 - Κατηγοριοποιεί αυτόματα: Περιβάλλον, Ζώα, Επιστήμη & Υγεία, Τεχνολογία, Αθλητισμός, Πολιτισμός, Κοινωνία, Κόσμος
 - Ελληνικό UI με αναζήτηση, φίλτρα ανά κατηγορία και ταξινόμηση (νεότερα / τυχαία)
