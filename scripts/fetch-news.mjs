@@ -46,6 +46,27 @@ const FEEDS = [
   { name: "TechXplore", url: "https://techxplore.com/rss-feed/", lang: "en", mode: "positive", max: 10 },
   { name: "Singularity Hub", url: "https://singularityhub.com/feed/", lang: "en", mode: "positive", max: 8 },
   { name: "Interesting Engineering", url: "https://interestingengineering.com/feed", lang: "en", mode: "positive", max: 8 },
+  { name: "ScienceDaily Science", url: "https://www.sciencedaily.com/rss/top/science.xml", lang: "en", mode: "positive", max: 10 },
+  { name: "SciTechDaily", url: "https://scitechdaily.com/feed/", lang: "en", mode: "positive", max: 10 },
+
+  // Διεθνή sites θετικού/λύσεων περιεχομένου
+  { name: "Greater Good", url: "https://greatergood.berkeley.edu/rss", lang: "en", mode: "goodsite", max: 12 },
+  { name: "Anthropocene", url: "https://www.anthropocenemagazine.org/feed/", lang: "en", mode: "goodsite", max: 12 },
+
+  // Ελληνικές πηγές (αυστηρό θετικό φίλτρο)
+  { name: "Newsbeast Υγεία", url: "https://www.newsbeast.gr/health/feed", lang: "el", mode: "greekHard", max: 12 },
+  { name: "Newsbeast Τεχνολογία", url: "https://www.newsbeast.gr/technology/feed", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Newsbeast Περιβάλλον", url: "https://www.newsbeast.gr/environment/feed", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Newsbeast Κοινωνία", url: "https://www.newsbeast.gr/society/feed", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Newsbeast Ψυχαγωγία", url: "https://www.newsbeast.gr/entertainment/feed", lang: "el", mode: "greekSoft", max: 8 },
+  { name: "Newsbeast Ταξίδια", url: "https://www.newsbeast.gr/travel/feed", lang: "el", mode: "greekSoft", max: 8 },
+  { name: "ERT News", url: "https://www.ertnews.gr/feed/", lang: "el", mode: "greekHard", max: 12 },
+  { name: "Πρώτο Θέμα", url: "https://www.protothema.gr/rss/", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Gazzetta", url: "https://www.gazzetta.gr/rss", lang: "el", mode: "greekSports", max: 12 },
+  { name: "Popaganda", url: "https://popaganda.gr/feed/", lang: "el", mode: "greekHard", max: 8 },
+  { name: "Iatropedia", url: "https://www.iatropedia.gr/feed", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Υγεία μου", url: "https://www.ygeiamou.gr/feed/", lang: "el", mode: "greekHard", max: 10 },
+  { name: "Techgear", url: "https://www.techgear.gr/feed/", lang: "el", mode: "greekHard", max: 10 },
 ];
 
 const SOURCE_DEFAULT_COUNTRY = {
@@ -73,6 +94,11 @@ const NEGATIVE_TITLE = [
   /\bside effects?\b/i, /\braises? (?:the )?risk\b/i, /\bincreas(?:e|es|ed|ing) (?:the )?risk\b/i,
   /\blinked to (?:a )?(?:higher|increased) risk\b/i, /\bwarning\b/i, /\bdeaths?\b/i,
   /\bhospitalized\b/i, /\binfections?\b/i, /\bdisease (?:spread|outbreak)\b/i,
+  // εγκληματικό/πολεμικό πλαίσιο ακόμη και σε θετικά sites
+  /\bpolice (?:used|use|uses|seized|arrest(?:ed|s)?|raid(?:ed|s)?|investigat\w*)\b/i,
+  /\billegal (?:factory|factories|weapons?|guns?|arms)\b/i,
+  /\bweapons? (?:factory|factories|plant|dealer|trafficking)\b/i,
+  /\barms? (?:dealer|trafficking|smuggl\w*)\b/i,
 ];
 
 // Θετικά σήματα για πηγές επιστήμης/τεχνολογίας (mode: "positive")
@@ -153,6 +179,35 @@ const POSITIVE_EL = [
 
 const POSITIVE_GREEK_SPORTS = [
   /νίκη|νίκησε|κέρδισ|ρεκόρ|γκολ|τέρμα|πρόκριση|ημιτελικ|τελικ|αήττητ|κύπελλο|πρωταθλ|τρόπαι|μετάλλιο|χατ-τρικ|ντέρμπι|διπλό|νίκες| highlights/i,
+];
+
+// Ισχυρά θετικά σήματα — απαιτούνται στον ΤΙΤΛΟ για mainstream ελληνικές πηγές
+const STRONG_POSITIVE_EL = [
+  /νίκη|νίκησε|κέρδισ|ρεκόρ|βραβευ|διάκρισ|τρόπαι|μετάλλιο|πρωταθλ|κύπελλο|ολυμπι|πρόκριση|αήττητ/,
+  /ανακαλύφ|ανακάλυψ|εφεύρ|καινοτομ|επιτυχ|επέτυχ|πέτυχ|κατόρθω|θρίαμβ|πρωτοπορ/,
+  /θεραπεύ|θεραπεί|ίαση|εμβόλι|φάρμακ|διαγνωστικ|εγχείρησ|μεταμόσχευ|αποκατ[αά]στα|ίασ/,
+  /εθελοντ|δωρε|φιλανθρωπ|προσφορ|σωτηρ|σώζ|σώθηκ|απελευθερ|προστατ|υπερασπ|αιμοδοσ/,
+  /εγκαίνι|εγκαινιά|ιδρύ|δημιουργ(εί|ήθηκε|ησε)|ξεκιν[άα]|υλοποι|παραδίδ|προσφέρ/,
+  /βελτιώ|καλύτερ|πρόοδ|άνθιση|ανάκαμψη|αποδοτικ|εξοικονομ|μείωση|λιγότερ/,
+  /ελπιδ|θετικ|χαρά|ευτυχ|αγάπη|φιλία|ηρω|μεταμόρφωση|αναγέννηση|όμορφ|μοναδικ|ξεχωρίζ|εμπνέ/,
+  /φυτεύ|δάσος|δάση|ανακυκλ|ηλιακ|πράσιν|ανανεωσι|περιβάλλ|καθαρισ|απορρύπανσ|βιώσιμ|φωτοβολτα/,
+  /τεχνολογ|τεχνητή νοημοσύν|ρομποτ|δορυφόρ|υπερυπολογιστ|διάστημ|αστρονομ|κβαντ|ηλεκτροκίνητ|μπαταρ/,
+  /τέχν|μουσικ|φεστιβαλ|πολιτισμ|μουσείο|παράδοσ|αρχαιολογ|ευρημ|κληρονομ|έκθεσ|θέατρ|κινηματογρ/,
+  /εκπαιδευ|σχολεί|μαθητ|φοιτητ|πανεπιστημ|υποτροφ|βιβλί|ανάγνωσ|γνώσ/,
+  /εορτα|γιορτ|επετει|πανηγύρ|φεστιβάλ/,
+];
+
+// Αρνητικό/δυσάρεστο πλαίσιο — αποκλείεται οριστικά
+const NEGATIVE_EL_STRICT = [
+  /θάνατ|θανάτ|νεκρ|πέθαν|πεθα|φον|δολοφ|σκοτώθ|αυτοκτον|τραγωδ|πένθ/,
+  /τραυματ|νοσηλεύ|νοσηλε|νοσοκομεί|επίθεσ|ξυλοδαρμ|κακοποι|βιασμ|σεξουαλ|πλήγμα|πλήγ/,
+  /καρκίν|όγκο|όγκου|ασθέν|νόσος|νόσο|πάθησ|πάσχ|χρόνι|πόνο|πόνου|βουλιμ|ανορεξ|κατάθλιψ|άγχος|ψυχικ|εθισμ/,
+  /κίνδυν|επικίνδυν|χημικ|τοξικ|δηλητηρ|μόλυνσ|ρύπανσ|κλιματική κρίση|καταστροφ/,
+  /απάτη|απατεών|κλοπ|κλεμ|ληστ|έγκλημ|συλλήψ|συνελήφθ|φυλάκισ|κατηγορ|δικαστ|μήνυσ|ένοχ|καταδίκ|αστυν/,
+  /πόλεμ|πολεμ|σύρραξ|προσφυγ|μετανάστ|λιμοκτον|φτώχει|ανεργ|πείνα|επιδημ|πανδημ|κορωνοϊ/,
+  /εκλογ|βουλ|έδρες|προϋπολογισμ|κυβέρνησ|υπουργ|υποψήφι|πολιτικ|κόμμα|Τραμπ|κορυφής/,
+  /αίρεσ|σέκτα|ζητούν|διεκδικ|έλλειψ|έλλειμμα|υποστελεχ|απειλ|απειλεί/,
+  /υπόμνημα|απολογ|δικογραφ|αρνείται|κατηγορούμεν|ανακρίσ|Μαζωνάκη|κατασκοπευτικ|χακάρ/,
 ];
 
 /* ---------- κατηγορίες ---------- */
@@ -393,17 +448,18 @@ function normalizeTitle(t) {
 /* ---------- ελληνικό φιλτράρισμα ---------- */
 
 function greekPasses(mode, title, description) {
-  const combined = `${title} ${description}`;
+  // greekSoft (ταξίδια/ψυχαγωγία/θετικά sites): αρκεί να μην είναι αρνητικός ο τίτλος
+  if (mode === "greekSoft") {
+    return !NEGATIVE_EL_TITLE.some((re) => re.test(title));
+  }
+  // Αυστηρό φίλτρο: αποκλείουμε αρνητικό/ουδέτερο πλαίσιο στον τίτλο
   if (NEGATIVE_EL_TITLE.some((re) => re.test(title))) return false;
+  if (NEGATIVE_EL_STRICT.some((re) => re.test(title))) return false;
   if (mode === "greekSports") {
-    return POSITIVE_GREEK_SPORTS.some((re) => re.test(combined)) || POSITIVE_EL.some((re) => re.test(title));
+    return POSITIVE_GREEK_SPORTS.some((re) => re.test(title));
   }
-  // greekHard (mainstream): απαιτείται θετικό σήμα
-  if (mode === "greekHard") {
-    return POSITIVE_EL.some((re) => re.test(combined));
-  }
-  // greekSoft (site καλών νέων): αρκεί να μην είναι αρνητικός ο τίτλος
-  return true;
+  // greekHard: απαιτείται ΙΣΧΥΡΟ θετικό σήμα στον τίτλο
+  return STRONG_POSITIVE_EL.some((re) => re.test(title));
 }
 
 /* ---------- θετικό φιλτράρισμα (επιστήμη/τεχνολογία) ---------- */

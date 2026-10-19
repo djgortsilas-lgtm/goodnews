@@ -4,9 +4,12 @@
 
 ## Τι κάνει
 
-- Συλλέγει RSS από ~19 sites (Good News Network, Positive News, Nice News, Good Good Good, Reasons to be Cheerful, Happy Eco News, The Better India κ.ά.)
-- Ιατρικά & τεχνολογικά επιτεύγματα από Futurity, ScienceDaily Health, Medical Xpress, Neuroscience News, New Atlas, TechXplore, Singularity Hub, Interesting Engineering — με φίλτρο **μόνο θετικών** τίτλων
+- Συλλέγει RSS από ~36 πηγές, ελληνικές και διεθνείς (Good News Network, Positive News, Nice News, Good Good Good, Reasons to be Cheerful, Happy Eco News, The Better India, Greater Good, Anthropocene κ.ά.)
+- Ελληνικές πηγές: Newsbeast (Υγεία, Τεχνολογία, Περιβάλλον, Κοινωνία, Ψυχαγωγία, Ταξίδια), ERT News, Πρώτο Θέμα, Gazzetta, Popaganda, Iatropedia, Υγεία μου, Techgear
+- Ιατρικά & τεχνολογικά επιτεύγματα από Futurity, ScienceDaily, Medical Xpress, Neuroscience News, New Atlas, TechXplore, Singularity Hub, Interesting Engineering, SciTechDaily — με φίλτρο **μόνο θετικών** τίτλων
+- **Αυστηρό φίλτρο θετικότητας**: για τις mainstream ελληνικές πηγές απαιτείται ισχυρό θετικό σήμα στον τίτλο και αποκλείεται κάθε αρνητικό/δυσάρεστο πλαίσιο (θάνατος, έγκλημα, ασθένεια, πόλεμος, πολιτική, καταστροφή κ.λπ.)
 - Φιλτράρει αρνητικούς τίτλους (blacklist), αφαιρεί διπλότυπα και μη-άρθρα
+- Μεταφράζει αυτόματα τίτλους και περιλήψεις διεθνών άρθρων στα ελληνικά (με cache)
 - Κατηγοριοποιεί αυτόματα: Περιβάλλον, Ζώα, Επιστήμη & Υγεία, Τεχνολογία, Αθλητισμός, Πολιτισμός, Κοινωνία, Κόσμος
 - Ελληνικό UI με αναζήτηση, φίλτρα ανά κατηγορία και ταξινόμηση (νεότερα / τυχαία)
 - Κάθε κάρτα συνδέεται στο πρωτότυπο άρθρο
